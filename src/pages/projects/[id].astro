@@ -43,13 +43,26 @@ try {
   headings = renderResult.headings || [];
 
   const getLastUpdatedTime = client.api.github['last-updated-file']
-  const githubData = await getLastUpdatedTime
-    .$get({ query: { path: `projects/${entry.id}.mdx` } })
-    .then((res) => res.json())
-    .catch(error => {
-      console.error('Error fetching last updated time:', error);
-      return { latestCommitUrl: '', lastUpdatedTime: new Date().toISOString() };
-    })
+  let githubData = { latestCommitUrl: '', lastUpdatedTime: new Date().toISOString() };
+
+  try {
+    const response = await getLastUpdatedTime.$get({ query: { path: `projects/${entry.id}.mdx` } });
+
+    if (response && 'json' in response) {
+      try {
+        const data = await response.json();
+        if (data && typeof data === 'object') {
+          githubData = data;
+        }
+      } catch (jsonError) {
+        console.error('Error parsing GitHub response:', jsonError);
+        // Use fallback data
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching last updated time:', error);
+    // Use fallback data
+  }
 
   latestCommitUrl = githubData.latestCommitUrl || '';
   lastUpdatedTime = githubData.lastUpdatedTime || new Date().toISOString();
