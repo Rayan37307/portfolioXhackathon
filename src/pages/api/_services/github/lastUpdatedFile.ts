@@ -8,14 +8,14 @@ interface LastUpdatedTimeData {
 const getLastUpdatedTimeByFile = async (
   filePath: string
 ): Promise<LastUpdatedTimeData> => {
-  try {
-    // Check if GitHub token is available
-    if (!GITHUB_ACCESS_TOKEN) {
-      console.warn('Missing GitHub access token. Using fallback data.');
-      return getFallbackData();
-    }
+  // During build, always return fallback data to avoid API issues
+  if (process.env.NODE_ENV === 'production' || !GITHUB_ACCESS_TOKEN) {
+    console.warn('Skipping GitHub API call in production build. Using fallback data.');
+    return getFallbackData();
+  }
 
-    // Use a more generic repository path for the demo
+  try {
+    // Only attempt API calls in development mode
     const API_URL = `https://api.github.com/repos/Rayan37307/portfolioXhackathon/commits?`
 
     const params = new URLSearchParams({

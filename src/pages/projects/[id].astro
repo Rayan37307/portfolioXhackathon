@@ -42,30 +42,37 @@ try {
   Content = renderResult.Content;
   headings = renderResult.headings || [];
 
-  const getLastUpdatedTime = client.api.github['last-updated-file']
-  let githubData = { latestCommitUrl: '', lastUpdatedTime: new Date().toISOString() };
+  // Set default values for GitHub data
+  let latestCommitUrl = '';
+  let lastUpdatedTime = new Date().toISOString();
 
-  try {
-    const response = await getLastUpdatedTime.$get({ query: { path: `projects/${entry.id}.mdx` } });
+  // Skip GitHub API calls during build to avoid errors
+  if (import.meta.env.DEV) {
+    try {
+      const getLastUpdatedTime = client.api.github['last-updated-file'];
+      const response = await getLastUpdatedTime.$get({ query: { path: `projects/${entry.id}.mdx` } });
 
-    if (response && 'json' in response) {
-      try {
-        const data = await response.json();
-        if (data && typeof data === 'object') {
-          githubData = data;
+      if (response && 'json' in response) {
+        try {
+          const data = await response.json();
+          if (data && typeof data === 'object') {
+            latestCommitUrl = data.latestCommitUrl || '';
+            lastUpdatedTime = data.lastUpdatedTime || new Date().toISOString();
+          }
+        } catch (jsonError) {
+          console.error('Error parsing GitHub response:', jsonError);
+          // Use default values
         }
-      } catch (jsonError) {
-        console.error('Error parsing GitHub response:', jsonError);
-        // Use fallback data
       }
+    } catch (error) {
+      console.error('Error fetching last updated time:', error);
+      // Use default values
     }
-  } catch (error) {
-    console.error('Error fetching last updated time:', error);
-    // Use fallback data
+  } else {
+    console.log('Skipping GitHub API call in production build');
   }
 
-  latestCommitUrl = githubData.latestCommitUrl || '';
-  lastUpdatedTime = githubData.lastUpdatedTime || new Date().toISOString();
+  // latestCommitUrl and lastUpdatedTime are already set with default values
 
   const readingTimeResult = readingTime(entry.body || '');
   minutes = readingTimeResult.minutes || 0;
