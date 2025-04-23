@@ -19,7 +19,10 @@ try {
     return { status: 500 };
   });
 
-  data = response.status === 200 ? (await response.json()).tweet : null;
+  data = response.status === 200 ?
+    // Only call json() if it's a proper response object
+    'json' in response ? (await response.json()).tweet : null :
+    null;
 } catch (error) {
   console.error(`Error in TweetCard for ID ${tweetId}:`, error);
   data = null;

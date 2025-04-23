@@ -29,7 +29,10 @@ try {
       return { status: 500 };
     });
 
-  data = response.status === 200 ? await response.json() : null;
+  data = response.status === 200 ?
+    // Only call json() if it's a proper response object
+    'json' in response ? await response.json() : null :
+    null;
 
   if (data && data.pushedAt) {
     updatedTime = dayjs(data.pushedAt).fromNow();

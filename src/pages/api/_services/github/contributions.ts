@@ -58,7 +58,8 @@ function getFallbackData(): GithubContributionData {
   }
 
   return {
-    lastPushedAt: today.toISOString(),
+    // Convert to timestamp (number) instead of ISO string
+    lastPushedAt: today.getTime(),
     totalContributions: contributions.reduce((sum, item) => sum + item.count, 0),
     contributions
   };

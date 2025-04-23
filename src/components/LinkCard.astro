@@ -13,24 +13,42 @@ interface Props {
 
 const { url, class: className } = Astro.props
 
-let metadata = { success: false };
+// Define a more complete type for metadata
+type LinkMetadata = {
+  success: boolean;
+  title?: string;
+  description?: string;
+  faviconUrl?: string;
+  image?: {
+    url: string;
+    alt?: string;
+  };
+};
+
+let metadata: LinkMetadata = { success: false };
 let aspectRatio: number | undefined;
 
 try {
-  metadata = await client.api['link-metadata']
+  const response = await client.api['link-metadata']
     .$get({ query: { url } })
-    .then((res) => res.json())
     .catch(error => {
       console.error(`Error fetching link metadata for URL ${url}:`, error);
       return { success: false };
     });
 
+  // Safely parse the response
+  if ('json' in response) {
+    metadata = await response.json() as LinkMetadata;
+  } else {
+    metadata = { success: false };
+  }
+
   if (!metadata.success) return;
 
   // infer remote image size
-  if (metadata.image) {
+  if (metadata.image && metadata.image.url) {
     try {
-      const { height, width } = await inferRemoteSize(metadata.image?.url);
+      const { height, width } = await inferRemoteSize(metadata.image.url);
       aspectRatio = width / height;
     } catch (error) {
       console.error(`Error inferring image size for URL ${metadata.image.url}:`, error);
