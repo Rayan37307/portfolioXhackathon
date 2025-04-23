@@ -3,12 +3,14 @@ import client from '@/lib/client'
 
 import BentoItemTypingSpeedContent from './BentoItemTypingSpeedContent'
 
+import type { MonkeyTypeLanguage } from '@/types'
+
 // Define default values for required props
 let data = {
   wpm: 0,
   acc: 0,
   consistency: 0,
-  language: 'english' as const,
+  language: 'english' as MonkeyTypeLanguage,
   time: 0
 };
 
@@ -21,8 +23,17 @@ try {
 
   if (response && 'json' in response) {
     const responseData = await response.json();
-    // Merge with defaults to ensure all required props are present
-    data = { ...data, ...responseData };
+    // Safely update data with type checking
+    if (responseData) {
+      if (typeof responseData.wpm === 'number') data.wpm = responseData.wpm;
+      if (typeof responseData.acc === 'number') data.acc = responseData.acc;
+      if (typeof responseData.consistency === 'number') data.consistency = responseData.consistency;
+      if (typeof responseData.time === 'number') data.time = responseData.time;
+      // Only set language if it's a valid MonkeyTypeLanguage
+      if (responseData.language === 'english' || responseData.language === 'indonesian') {
+        data.language = responseData.language;
+      }
+    }
   }
 
   Astro.response.headers.set('Cache-Control', 'public, max-age=86400');
