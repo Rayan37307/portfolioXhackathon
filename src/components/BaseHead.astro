@@ -1,0 +1,59 @@
+---
+// Import the global.css file here so that it is included on
+// all pages through the use of the <BaseHead /> component.
+import '../styles/global.css'
+
+import { ClientRouter } from 'astro:transitions'
+
+// Comment out the AstroFont import as it might be causing issues
+// import { AstroFont } from 'astro-font'
+---
+
+<!-- Global Metadata -->
+<meta charset='utf-8' />
+<meta name='viewport' content='width=device-width,initial-scale=1' />
+<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
+<meta name='generator' content={Astro.generator} />
+<link rel='sitemap' href='/sitemap-index.xml' />
+
+<!-- Font - Using standard link tags instead of AstroFont -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+
+<!-- Local fonts using standard font-face -->
+<style>
+  @font-face {
+    font-family: 'Switzer';
+    src: url('/fonts/Switzer-Variable.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Fustat SemiBold';
+    src: url('/fonts/Fustat-VariableFont_wght.ttf') format('truetype');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  body {
+    font-family: 'Switzer', sans-serif;
+  }
+
+  code {
+    font-family: 'DM Mono', monospace;
+  }
+</style>
+
+<script
+  is:inline
+  defer
+  type='text/partytown'
+  src='https://cloud.umami.is/script.js'
+  data-website-id='171092c9-481f-43cd-865f-97d8b52b886f'
+  data-domains='jestsee.com,www.jestsee.com'></script>
+
+<ClientRouter fallback='swap' />

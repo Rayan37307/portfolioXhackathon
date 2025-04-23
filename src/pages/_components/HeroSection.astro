@@ -1,0 +1,61 @@
+---
+import Keyboard from '../_components/Keyboard.astro'
+---
+
+<section class='flex h-screen flex-col gap-8 pb-32 pt-24 sm:justify-center'>
+  <div
+    class:list={[
+      'flex w-fit items-center rounded-full',
+      'gap-3 py-1.5 pl-3 pr-4',
+      'border border-zinc-600/75',
+      'bg-slate-950/25',
+      'enter-animation'
+    ]}
+  >
+    <div class='relative size-3'>
+      <div
+        class='absolute size-full animate-ping rounded-full bg-green-300 opacity-65'
+      >
+      </div>
+      <div class='drop-shadow-green size-full rounded-full bg-green-400'></div>
+    </div>
+    <h3 class='text-sm text-slate-200 max-xs:text-xs'>
+      Available for projects
+    </h3>
+  </div>
+  <h1
+    class='enter-animation text-[clamp(2rem,7vw,3rem)] font-medium leading-[1.05] tracking-tight'
+  >
+    Hi, I’m Rayan. <br /> A software engineer.
+  </h1>
+  <h2
+    class='enter-animation mb-8 max-w-xl leading-relaxed text-slate-400 max-sm:text-sm'
+  >
+    Mainly working in the JavaScript ecosystem, I’m a dedicated problem-solver
+    who thrives on learning and building.
+  </h2>
+  <Keyboard class='enter-animation' />
+</section>
+
+<style is:global>
+  .drop-shadow-green {
+    filter: drop-shadow(0px 0px 8px #59ff7e);
+  }
+
+  .enter-animation {
+    opacity: 0.025;
+    animation: fade-in-bottom 0.45s cubic-bezier(0.39, 0.575, 0.565, 1) forwards;
+  }
+
+  .enter-animation:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .enter-animation:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  .enter-animation:nth-child(4) {
+    animation-delay: 0.6s;
+  }
+</style>

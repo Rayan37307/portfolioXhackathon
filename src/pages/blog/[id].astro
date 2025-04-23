@@ -1,0 +1,80 @@
+---
+import type { GetStaticPaths } from 'astro'
+import { getCollection, render } from 'astro:content'
+import readingTime from 'reading-time'
+
+import ContentWrapper from '@/components/ContentWrapper.astro'
+import BlogLayout from '@/layouts/BlogLayout'
+import client from '@/lib/client'
+
+export const getStaticPaths = (async () => {
+  const blogEntries = await getCollection('blog')
+
+  return blogEntries.map((entry) => {
+    return {
+      params: { id: entry.id },
+      props: { entry }
+    }
+  })
+}) satisfies GetStaticPaths
+
+const { entry } = Astro.props
+
+// Declare variables outside the try block so they're accessible in the template
+let Content;
+let headings = [];
+let latestCommitUrl = '';
+let lastUpdatedTime = new Date().toISOString();
+let minutes = 0;
+
+try {
+  // Assign values inside the try block
+  const renderResult = await render(entry);
+
+  if (!renderResult || !renderResult.Content) {
+    throw new Error('Failed to render content: renderResult or Content is undefined');
+  }
+
+  Content = renderResult.Content;
+  headings = renderResult.headings || [];
+
+  const getLastUpdatedTime = client.api.github['last-updated-file']
+  const githubData = await getLastUpdatedTime
+    .$get({ query: { path: `blog/${entry.id}.mdx` } })
+    .then((res) => res.json())
+    .catch(error => {
+      console.error('Error fetching last updated time:', error);
+      return { latestCommitUrl: '', lastUpdatedTime: new Date().toISOString() };
+    })
+
+  latestCommitUrl = githubData.latestCommitUrl || '';
+  lastUpdatedTime = githubData.lastUpdatedTime || new Date().toISOString();
+
+  const readingTimeResult = readingTime(entry.body || '');
+  minutes = readingTimeResult.minutes || 0;
+
+} catch (error) {
+  console.error('Error rendering blog post:', error);
+  return new Response('Error rendering blog post. Please try again later.', {
+    status: 500
+  });
+}
+
+// Ensure we have a valid Content component
+if (!Content) {
+  return new Response('Error: Content component is undefined', {
+    status: 500
+  });
+}
+---
+
+<BlogLayout
+  headings={headings}
+  id={entry.id}
+  updatedDate={new Date(lastUpdatedTime)}
+  latestCommitUrl={latestCommitUrl}
+  readingTime={Math.ceil(minutes)}
+  {...entry.data}
+>
+  <ContentWrapper content={Content} />
+</BlogLayout>

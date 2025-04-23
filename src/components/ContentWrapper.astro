@@ -1,0 +1,37 @@
+---
+import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
+
+import MarkdownImage from './Image/MarkdownImage.astro'
+import { LinkArticle } from './Link'
+
+interface Props {
+  content?: AstroComponentFactory
+}
+
+const { content: Content } = Astro.props
+
+let errorOccurred = false;
+let errorMessage = '';
+
+try {
+  // Validate that Content is a valid component
+  if (!Content || typeof Content !== 'function') {
+    errorOccurred = true;
+    errorMessage = 'Content is not a valid component';
+    console.error('ContentWrapper error:', errorMessage);
+  }
+} catch (error) {
+  errorOccurred = true;
+  errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  console.error('ContentWrapper error:', error);
+}
+---
+
+{errorOccurred ? (
+  <div class="p-4 bg-red-900/20 rounded border border-red-500">
+    <p>Error rendering content: {errorMessage}</p>
+    <p>Please try refreshing the page or contact the site administrator.</p>
+  </div>
+) : (
+  Content && <Content components={{ a: LinkArticle, img: MarkdownImage }} />
+)}

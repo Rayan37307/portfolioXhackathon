@@ -1,0 +1,24 @@
+---
+import client from '@/lib/client'
+
+import BentoItemTypingSpeedContent from './BentoItemTypingSpeedContent'
+
+let data = {};
+
+try {
+  data = await client.api.monkeytype.$get()
+    .then((res) => res.json())
+    .catch(error => {
+      console.error('Error fetching monkeytype data:', error);
+      return {};
+    });
+
+  Astro.response.headers.set('Cache-Control', 'public, max-age=86400');
+} catch (error) {
+  console.error('Error in BentoItemTypingSpeed:', error);
+  // Return empty data if there's an error
+  data = {};
+}
+---
+
+<BentoItemTypingSpeedContent {...data} client:only='react' />

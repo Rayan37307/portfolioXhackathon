@@ -1,0 +1,118 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro'
+import { getCollection, render } from 'astro:content'
+import readingTime from 'reading-time'
+import type { BreadcrumbList, WithContext } from 'schema-dts'
+
+import ContentWrapper from '@/components/ContentWrapper.astro'
+import ProjectLayout from '@/layouts/ProjectLayout'
+import client from '@/lib/client'
+import { getProjectSchema, projectWebsite } from '@/lib/structuredData'
+
+interface Props extends InferGetStaticPropsType<typeof getStaticPaths> {}
+
+export const getStaticPaths = (async () => {
+  const projectEntries = await getCollection('projects')
+
+  return projectEntries.map((entry) => ({
+    params: { id: entry.id },
+    props: { entry }
+  }))
+}) satisfies GetStaticPaths
+
+const { entry } = Astro.props
+
+// Declare variables outside the try block so they're accessible in the template
+let Content;
+let headings = [];
+let latestCommitUrl = '';
+let lastUpdatedTime = new Date().toISOString();
+let minutes = 0;
+let words = 0;
+let jsonLd = {};
+
+try {
+  // Assign values inside the try block
+  const renderResult = await render(entry);
+
+  if (!renderResult || !renderResult.Content) {
+    throw new Error('Failed to render content: renderResult or Content is undefined');
+  }
+
+  Content = renderResult.Content;
+  headings = renderResult.headings || [];
+
+  const getLastUpdatedTime = client.api.github['last-updated-file']
+  const githubData = await getLastUpdatedTime
+    .$get({ query: { path: `projects/${entry.id}.mdx` } })
+    .then((res) => res.json())
+    .catch(error => {
+      console.error('Error fetching last updated time:', error);
+      return { latestCommitUrl: '', lastUpdatedTime: new Date().toISOString() };
+    })
+
+  latestCommitUrl = githubData.latestCommitUrl || '';
+  lastUpdatedTime = githubData.lastUpdatedTime || new Date().toISOString();
+
+  const readingTimeResult = readingTime(entry.body || '');
+  minutes = readingTimeResult.minutes || 0;
+  words = readingTimeResult.words || 0;
+
+  const projectStructuredData = getProjectSchema(entry)
+
+  const breadcrumbsStructuredData: WithContext<BreadcrumbList> = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Projects',
+        item: `${import.meta.env.SITE}/projects/`
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: entry.data.title,
+        item: `${import.meta.env.SITE}/projects/${entry.id}/`
+      }
+    ]
+  }
+
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [projectStructuredData, breadcrumbsStructuredData, projectWebsite]
+  }
+
+} catch (error) {
+  console.error('Error rendering project:', error);
+  return new Response('Error rendering project. Please try again later.', {
+    status: 500
+  });
+}
+
+// Ensure we have a valid Content component
+if (!Content) {
+  return new Response('Error: Content component is undefined', {
+    status: 500
+  });
+}
+---
+
+<ProjectLayout
+  headings={headings}
+  slug={entry.id}
+  readingTime={Math.ceil(minutes)}
+  wordsCount={words}
+  updatedDate={new Date(lastUpdatedTime)}
+  latestCommitUrl={latestCommitUrl}
+  {...entry.data}
+>
+  <script
+    is:inline
+    type='application/ld+json'
+    set:html={JSON.stringify(jsonLd)}
+    slot='head'
+  />
+  <ContentWrapper content={Content} />
+</ProjectLayout>

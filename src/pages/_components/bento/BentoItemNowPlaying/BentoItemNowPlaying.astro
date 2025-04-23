@@ -1,0 +1,22 @@
+---
+import client from '@/lib/client'
+
+import BentoItemNowPlayingReact from './BentoItemNowPlaying'
+
+let initialData = {};
+
+try {
+  initialData = await client.api.spotify.$get()
+    .then((res) => res.json())
+    .catch(error => {
+      console.error('Error fetching Spotify data:', error);
+      return {};
+    });
+} catch (error) {
+  console.error('Error in BentoItemNowPlaying:', error);
+  // Return empty data if there's an error
+  initialData = {};
+}
+---
+
+<BentoItemNowPlayingReact initialData={initialData} client:only='react' />
